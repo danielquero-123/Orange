@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orange - Tienda Premium</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Tailwind Config para colores vibrantes -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'apple-gray': '#f5f5f7',
+                        'apple-dark': '#0b0b0c',
+                        'orange-brand': '#ff5e00',
+                        'orange-neon': '#ff3d00',
+                        'orange-vibrant': '#ff8008'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        html { scroll-behavior: smooth; }
+        
+        .glass-nav {
+            background-color: rgba(11, 11, 12, 0.8);
+            backdrop-filter: saturate(180%) blur(25px);
+            -webkit-backdrop-filter: saturate(180%) blur(25px);
+        }
+
+        .product-card {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(255, 94, 0, 0.15);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .toast-enter {
+            transform: translateY(100%) scale(0.9);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .toast-enter-active {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        #search-modal {
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+        }
+        
+        .color-btn.active {
+            box-shadow: 0 0 0 2px #0b0b0c, 0 0 0 4px #ff5e00;
+        }
+
+        /* Gradiente animado para un look súper llamativo */
+        .animated-gradient-text {
+            background: linear-gradient(to r, #ff8008, #ffc837, #ff3d00);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: textShine 4s linear infinite;
+        }
+
+        @keyframes textShine {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body class="bg-[#0b0b0c] text-white font-sans antialiased overflow-x-hidden">
+
+    <!-- Navegación Premium Oscura con Acentos Neón -->
+    <nav class="fixed w-full top-0 z-50 glass-nav border-b border-white/10 transition-colors duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-14 text-xs font-semibold tracking-wide">
+                <!-- Logo con animación de carga de color -->
+                <a href="#" class="text-2xl text-orange-brand hover:text-white transition-all duration-300 flex items-center gap-2 group">
+                    <i class="ph-fill ph-orange-slice group-hover:rotate-180 transition-transform duration-500"></i>
+                    <span class="tracking-wider text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-brand to-amber-400">ORANGE</span>
+                </a>
+                
+                <!-- Enlaces de escritorio -->
+                <div class="hidden md:flex space-x-8 uppercase text-[10px] tracking-widest text-gray-300">
+                    <a href="#mac" class="hover:text-orange-brand transition-colors">Orange Book</a>
+                    <a href="#ipad" class="hover:text-orange-brand transition-colors">Orange Pad</a>
+                    <a href="#iphone" class="hover:text-orange-brand transition-colors">Orange Phone</a>
+                    <a href="#watch" class="hover:text-orange-brand transition-colors">Watch</a>
+                    <a href="#airpods" class="hover:text-orange-brand transition-colors">Pods</a>
+                </div>
+
+                <!-- Íconos derechos -->
+                <div class="flex items-center space-x-5">
+                    <button class="hover:text-orange-brand text-gray-300 transition-colors" onclick="toggleSearch()" title="Buscar">
+                        <i class="ph ph-magnifying-glass text-xl"></i>
+                    </button>
+                    <button class="hover:text-orange-brand text-gray-300 transition-colors relative" onclick="toggleCart()" title="Bolsa de compras">
+                        <i class="ph ph-bag text-xl"></i>
+                        <span id="cart-badge" class="absolute -top-1.5 -right-2 bg-gradient-to-r from-orange-neon to-orange-brand text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black animate-pulse hidden">0</span>
+                    </button>
+                    <button class="md:hidden hover:text-orange-brand text-gray-300 transition-colors">
+                        <i class="ph ph-list text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Modal de Búsqueda -->
+    <div id="search-modal" class="fixed inset-0 bg-black/95 z- hidden opacity-0 transition-opacity duration-300 flex flex-col pt-24 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto w-full relative">
+            <div class="flex items-center border-b-2 border-orange-brand pb-4">
+                <i class="ph ph-magnifying-glass text-4xl text-orange-brand mr-4"></i>
+                <input type="text" id="search-input" placeholder="Buscar tecnología Orange..." class="w-full text-3xl md:text-5xl bg-transparent border-none outline-none text-white placeholder-gray-600 font-light" autocomplete="off">
+                <button onclick="toggleSearch()" class="ml-4 text-gray-400 hover:text-orange-brand transition-colors">
+                    <i class="ph ph-x text-3xl"></i>
+                </button>
+            </div>
+            
+            <!-- Resultados Dinámicos -->
+            <div id="search-results" class="mt-8 space-y-4">
+                <p class="text-xs font-bold text-orange-brand uppercase tracking-widest mb-4">Sugerencias destacadas</p>
+                <a href="#iphone" onclick="toggleSearch()" class="block text-2xl font-semibold text-white hover:text-orange-brand transition-colors py-2 border-b border-white/5">Orange Phone 15 Pro <span class="text-xs text-gray-500 font-normal">Titanio Premium</span></a>
+                <a href="#mac" onclick="toggleSearch()" class="block text-2xl font-semibold text-white hover:text-orange-brand transition-colors py-2 border-b border-white/5">Orange Book Air <span class="text-xs text-gray-500 font-normal">Chip M3 Ultra rápido</span></a>
+                <a href="#ipad" onclick="toggleSearch()" class="block text-2xl font-semibold text-white hover:text-orange-brand transition-colors py-2 border-b border-white/5">Orange Pad Pro <span class="text-xs text-gray-500 font-normal">Pantalla Liquid Retina XDR</span></a>
+                <a href="#watch" onclick="toggleSearch()" class="block text-2xl font-semibold text-white hover:text-orange-brand transition-colors py-2 border-b border-white/5">Orange Watch Series 9 <span class="text-xs text-gray-500 font-normal">Entrenamiento Inteligente</span></a>
+                <a href="#airpods" onclick="toggleSearch()" class="block text-2xl font-semibold text-white hover:text-orange-brand transition-colors py-2 border-b border-white/5">Orange Pods Max <span class="text-xs text-gray-500 font-normal">Audio Espacial 3D</span></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal del Carrito con Descuentos -->
+    <div id="cart-modal" class="fixed inset-0 bg-black/60 z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="absolute right-0 top-0 h-full w-full max-w-md bg-apple-dark border-l border-white/10 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col" id="cart-sidebar">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                <h2 class="text-2xl font-extrabold tracking-tight text-white">Tu Bolsa <span class="text-orange-brand text-lg">Orange</span></h2>
+                <button onclick="toggleCart()" class="p-2 hover:bg-white/10 rounded-full text-white transition-colors">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+                <!-- Se llena con JS -->
+                <div class="text-center text-gray-400 mt-10" id="empty-cart-msg">
+                    <i class="ph ph-bag text-6xl text-orange-brand/50 mb-4"></i>
+                    <p class="font-medium">Tu bolsa de Orange está vacía.</p>
+                </div>
+            </div>
+
+            <!-- Sección de Cupones -->
+            <div class="p-6 border-t border-white/10 bg-black/40">
+                <div class="mb-4">
+                    <label for="coupon-code" class="block text-xs font-bold text-orange-brand uppercase tracking-wider mb-2">Código de Descuento (Prueba: ROMAN20)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="coupon-code" placeholder="Escribe el cupón" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-orange-brand transition-colors uppercase">
+                        <button onclick="applyCoupon()" class="bg-orange-brand hover:bg-orange-neon text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors">Aplicar</button>
+                    </div>
+                    <div id="coupon-feedback" class="text-xs mt-1 hidden"></div>
+                </div>
+
+                <div class="flex justify-between text-sm text-gray-400 mb-1">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal">$0.00</span>
+                </div>
+                <div id="discount-row" class="flex justify-between text-sm text-emerald-400 mb-3 hidden">
+                    <span>Descuento Especial (20%)</span>
+                    <span id="cart-discount">-$0.00</span>
+                </div>
+                <div class="flex justify-between text-xl font-bold mb-6 border-t border-white/5 pt-3">
+                    <span>Total</span>
+                    <span id="cart-total" class="text-orange-brand">$0.00</span>
+                </div>
+                <button onclick="checkout()" class="w-full bg-gradient-to-r from-orange-brand to-orange-neon text-white py-3.5 rounded-xl font-bold hover:brightness-110 transition-all duration-300 shadow-lg shadow-orange-brand/20">
+                    Completar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación Toast Premium -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gradient-to-r from-[#121214] to-black text-white px-6 py-4 rounded-2xl shadow-[0_10px_30px_rgba(255,94,0,0.3)] border border-orange-brand/30 z-50 flex items-center space-x-4 toast-enter hidden">
+        <div class="bg-orange-brand/10 p-2 rounded-full">
+            <i class="ph-fill ph-sparkle text-orange-brand text-2xl"></i>
+        </div>
+        <div>
+            <span id="toast-message" class="text-sm font-semibold block">Producto agregado</span>
+            <span class="text-xs text-gray-400">Ver en la Bolsa de Compra</span>
+        </div>
+    </div>
+
+    <!-- Modal de Más Información / Especificaciones Técnicas -->
+    <div id="info-modal" class="fixed inset-0 bg-black/80 z- hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div class="bg-[#121214] border border-white/10 p-8 rounded-3xl max-w-lg w-full relative transform scale-95 transition-transform duration-300" id="info-content">
+            <button onclick="toggleInfoModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+            <h3 id="info-title" class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-brand to-amber-400 mb-4">Especificaciones</h3>
+            <div id="info-text" class="text-gray-300 space-y-4 text-sm leading-relaxed">
+                <!-- Se inyectará información por JS -->
+            </div>
+        </div>
+    </div>
+
+    <main class="pt-14">
+        <!-- Hero Section con Efectos de Color llamativos -->
+        <section id="iphone" class="bg-gradient-to-b from-black via-[#0d0d0f] to-[#121214] relative overflow-hidden flex flex-col items-center justify-start pt-20 pb-16 min-h-screen">
+            <!-- Círculo de fondo con resplandor neón naranja -->
+            <div class="absolute w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-orange-brand/10 rounded-full blur-[100px] top-1/4 left-1/2 transform -translate-x-1/2 pointer-events-none"></div>
+
+            <div class="text-center z-10 px-4">
+                <span class="bg-orange-brand/10 text-orange-brand text-xs font-extrabold tracking-widest px-4 py-1.5 rounded-full uppercase border border-orange-brand/20 mb-4 inline-block">Innovación Titanio</span>
+                <h1 class="text-5xl md:text-8xl font-black tracking-tighter mb-4">Orange Phone 15 Pro</h1>
+                <p class="text-xl md:text-3xl font-light text-gray-300 mb-6">Poder titanio. Acabado de otro mundo.</p>
+                
+                <!-- Selector de Color Interactivo con Nombre de color -->
+                <div class="flex flex-col items-center mb-8">
+                    <span class="text-xs text-orange-brand font-bold uppercase tracking-wider mb-2">Color seleccionado: <span id="phone-color-name" class="text-white">Titanio Natural</span></span>
+                    <div class="flex justify-center space-x-4">
+                        <button onclick="changePhoneColor('natural', this)" class="color-btn active w-10 h-10 rounded-full bg-[#bfbba5] border border-gray-600 hover:scale-110 transition-transform shadow-lg shadow-[#bfbba5]/20" title="Titanio Natural"></button>
+                        <button onclick="changePhoneColor('blue', this)" class="color-btn w-10 h-10 rounded-full bg-[#2f455c] border border-gray-600 hover:scale-110 transition-transform shadow-lg shadow-[#2f455c]/20" title="Titanio Azul"></button>
+                        <button onclick="changePhoneColor('white', this)" class="color-btn w-10 h-10 rounded-full bg-[#f2f1ed] border border-gray-600 hover:scale-110 transition-transform shadow-lg shadow-[#f2f1ed]/20" title="Titanio Blanco"></button>
+                        <button onclick="changePhoneColor('black', this)" class="color-btn w-10 h-10 rounded-full bg-[#404145] border border-gray-600 hover:scale-110 transition-transform shadow-lg shadow-[#404145]/20" title="Titanio Negro"></button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
+                    <button id="btn-comprar-phone" class="bg-gradient-to-r from-orange-brand to-orange-neon text-white px-8 py-3.5 rounded-full font-bold hover:brightness-110 transition-all shadow-lg shadow-orange-brand/30" onclick="addToCart('phone15pro_natural', 'Orange Phone 15 Pro (Titanio Natural)', 999)">
+                        Comprar por $999
+                    </button>
+                    <button onclick="openInfoModal('phone')" class="bg-white/5 border border-white/10 text-white px-8 py-3.5 rounded-full font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                        Especificaciones <i class="ph ph-info"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Simulador de Smartphone -->
+            <div class="w-full max-w-4xl mt-16 relative flex justify-center">
+                <div class="w-64 h-[500px] md:w-80 md:h-[620px] rounded-[52px] border-[8px] border-gray-800 bg-black shadow-[0_0_80px_rgba(255,94,0,0.15)] flex flex-col justify-between overflow-hidden relative transition-all duration-500">
+                    <!-- Dynamic Island interactivo -->
+                    <div class="w-28 h-7 bg-black rounded-full absolute top-2 left-1/2 transform -translate-x-1/2 z-20 flex items-center justify-around px-2 text-[10px] text-orange-brand">
+                        <i class="ph-fill ph-orange-slice animate-spin" style="animation-duration: 6s;"></i>
+                        <span class="font-bold text-[9px]">9:41</span>
+                    </div>
+                    <!-- Fondo de pantalla variable -->
+                    <div id="phone-wallpaper" class="absolute inset-0 bg-gradient-to-tr from-orange-950/40 via-purple-900/40 to-black rounded-[40px] transition-all duration-700"></div>
+                    
+                    <div class="z-10 mt-16 text-center w-full px-4 text-white">
+                        <p class="text-4xl font-extrabold tracking-tight">OrangeOS 17</p>
+                        <p class="text-xs text-orange-brand mt-1 font-semibold tracking-widest uppercase">Modo Titanio</p>
+                    </div>
+
+                    <div class="z-10 mb-12 flex justify-center w-full">
+                        <div class="bg-black/30 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/10 text-xs font-bold tracking-wide">
+                            Desliza para ver más
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección MacBook con selector de Capacidad interactivo -->
+        <section id="mac" class="bg-apple-gray text-apple-dark relative overflow-hidden flex flex-col items-center justify-start pt-24 pb-20 min-h-screen">
+            <div class="text-center z-10 px-4 mb-10">
+                <span class="text-orange-neon text-xs font-black tracking-widest uppercase mb-2 block">Poder Extremo</span>
+                <h2 class="text-4xl md:text-7xl font-extrabold tracking-tight mb-2 text-black">Orange Book Air</h2>
+                <p class="text-lg md:text-2xl font-light text-gray-700 mb-8 max-w-2xl mx-auto">Increíblemente delgada. Procesador Orange M3 Pro. Batería que dura para todo un viaje intergaláctico.</p>
+                
+                <!-- Selector de Capacidad Interactivo -->
+                <div class="flex flex-col items-center mb-8">
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Configuración de almacenamiento:</span>
+                    <div class="flex justify-center space-x-1 bg-gray-300/60 p-1.5 rounded-full w-max mx-auto border border-gray-400/20">
+                        <button onclick="changeMacCapacity(256, 1099, this)" class="mac-cap-btn bg-white shadow-md text-black px-6 py-2 rounded-full text-xs font-bold transition-all">256GB</button>
+                        <button onclick="changeMacCapacity(512, 1299, this)" class="mac-cap-btn px-6 py-2 rounded-full text-xs font-semibold text-gray-600 hover:text-black transition-all">512GB</button>
+                        <button onclick="changeMacCapacity(1024, 1599, this)" class="mac-cap-btn px-6 py-2 rounded-full text-xs font-semibold text-gray-600 hover:text-black transition-all">1TB</button>
+                    </div>
+                </div>
+
+                <div class="flex space-x-4 justify-center">
+                    <button id="btn-comprar-mac" class="bg-black text-white px-8 py-3.5 rounded-full font-bold hover:bg-gray-800 transition-colors shadow-lg shadow-black/10" onclick="addToCart('bookair_256', 'Orange Book Air M3 (256GB)', 1099)">
+                        Comprar $1099
+                    </button>
+                    <button onclick="openInfoModal('mac')" class="bg-black/5 border border-black/10 text-black px-8 py-3.5 rounded-full font-semibold hover:bg-black/10 transition-all flex items-center gap-2">
+                        Especificaciones <i class="ph ph-info"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Simulador de Portátil en 3D falso -->
+            <div class="w-full max-w-5xl px-4 flex flex-col justify-center items-center">
+                <div class="w-full max-w-3xl aspect-[16/10] bg-gray-900 rounded-t-3xl border-[14px] border-zinc-900 shadow-2xl relative overflow-hidden transform hover:scale-[1.01] transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-orange-500 via-amber-400 to-red-600 flex items-center justify-center">
+                        <div class="text-center">
+                            <i class="ph-fill ph-orange-slice text-white text-7xl animate-pulse"></i>
+                            <p class="text-white text-sm font-bold tracking-widest mt-4">CHIP M3 INCORPORADO</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full max-w-4xl h-5 bg-zinc-800 rounded-b-2xl shadow-2xl relative">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-40 h-2 bg-zinc-700 rounded-b-md"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grid de Productos con Colores Interactivos Adicionales -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 max-w-[1400px] mx-auto">
+            
+            <!-- Orange Pad Pro con Selector de Color -->
+            <div id="ipad" class="bg-[#121214] border border-white/5 rounded-[32px] p-8 flex flex-col items-center text-center product-card min-h-[580px] relative overflow-hidden">
+                <span class="text-xs text-orange-brand font-bold uppercase tracking-widest mb-2">Para Creadores</span>
+                <h3 class="text-4xl font-extrabold mb-2">Orange Pad Pro</h3>
+                <p class="text-gray-400 mb-6 text-base">Reescribe lo que es posible.</p>
+                
+                <!-- Selector de color para iPad -->
+                <div class="flex space-x-3 mb-6">
+                    <button onclick="changeIpadColor('silver', this)" class="color-btn active w-8 h-8 rounded-full bg-zinc-300 border border-zinc-500" title="Plateado"></button>
+                    <button onclick="changeIpadColor('space', this)" class="color-btn w-8 h-8 rounded-full bg-zinc-700 border border-zinc-900" title="Gris Espacial"></button>
+                </div>
+
+                <div class="flex gap-4 mb-8">
+                    <button id="btn-comprar-pad" class="bg-gradient-to-r from-orange-brand to-orange-neon text-white px-6 py-2.5 rounded-full font-bold hover:brightness-110 transition-all text-sm" onclick="addToCart('padpro_silver', 'Orange Pad Pro (Plateado)', 799)">
+                        Comprar $799
+                    </button>
+                    <button onclick="openInfoModal('ipad')" class="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1">
+                        Saber más <i class="ph ph-arrow-right"></i>
+                    </button>
+                </div>
+                
+                <!-- Tablet Mockup interactiva -->
+                <div class="w-60 h-72 bg-zinc-950 rounded-3xl border-8 border-zinc-800 shadow-2xl mt-auto relative overflow-hidden flex items-center justify-center transition-all duration-500" id="ipad-mockup">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-orange-500 to-amber-500 opacity-80"></div>
+                    <div class="w-[94%] h-[94%] bg-black/10 backdrop-blur-md rounded-xl z-10 flex flex-col items-center justify-center p-4">
+                        <i class="ph ph-pencil-line text-4xl text-white"></i>
+                        <p class="text-[10px] text-white/80 font-bold mt-2">Compatible con Orange Pencil</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orange Watch con Selector de Correa -->
+            <div id="watch" class="bg-black border border-white/10 rounded-[32px] p-8 flex flex-col items-center text-center product-card min-h-[580px] relative overflow-hidden">
+                <span class="text-orange-neon font-bold tracking-widest text-xs mb-2">NUEVO RENDIMIENTO</span>
+                <h3 class="text-4xl font-extrabold mb-2">Orange Watch Ultra</h3>
+                <p class="text-gray-400 mb-6 text-base">La frontera de la salud y el deporte extremo.</p>
+                
+                <!-- Selector de Correa -->
+                <div class="flex space-x-3 mb-6">
+                    <button onclick="changeWatchColor('orange', this)" class="color-btn active w-8 h-8 rounded-full bg-orange-brand border border-orange-700" title="Naranja Deportivo"></button>
+                    <button onclick="changeWatchColor('green', this)" class="color-btn w-8 h-8 rounded-full bg-emerald-700 border border-emerald-950" title="Verde Militar"></button>
+                    <button onclick="changeWatchColor('black', this)" class="color-btn w-8 h-8 rounded-full bg-zinc-800 border border-zinc-950" title="Negro Carbono"></button>
+                </div>
+
+                <div class="flex gap-4 mb-8">
+                    <button id="btn-comprar-watch" class="bg-gradient-to-r from-orange-brand to-orange-neon text-white px-6 py-2.5 rounded-full font-bold hover:brightness-110 transition-all text-sm" onclick="addToCart('watch_orange', 'Orange Watch Ultra (Correa Naranja)', 399)">
+                        Comprar $399
+                    </button>
+                    <button onclick="openInfoModal('watch')" class="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1">
+                        Saber más <i class="ph ph-arrow-right"></i>
+                    </button>
+                </div>
+                
+                <!-- Reloj Mockup -->
+                <div class="w-32 h-44 bg-zinc-900 rounded-[2.5rem] border-4 border-zinc-700 shadow-2xl mt-auto relative flex flex-col justify-center items-center z-10">
+                    <!-- Correa Cambiable por JS -->
+                    <div id="watch-band" class="w-16 h-60 absolute -top-8 -bottom-8 bg-orange-brand -z-10 rounded-2xl transition-all duration-500"></div> 
+                    <div class="text-center p-3">
+                        <p class="text-xs text-orange-brand font-black tracking-widest">ACTIVIDAD</p>
+                        <i class="ph ph-heartbeat text-3xl text-red-500 animate-pulse mt-1"></i>
+                        <p class="text-xl font-black text-white mt-1">78 BPM</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orange Pods Max con Colores llamativos -->
+            <div id="airpods" class="bg-[#121214] border border-white/5 rounded-[32px] p-8 flex flex-col items-center text-center product-card md:col-span-2 min-h-[480px]">
+                <span class="text-xs text-orange-brand font-bold uppercase tracking-widest mb-2">Acústica Premium</span>
+                <h3 class="text-4xl md:text-5xl font-extrabold mb-2">Orange Pods Max</h3>
+                <p class="text-gray-400 mb-6 text-base max-w-lg">Audio de alta fidelidad con cancelación activa de ruido avanzada. Rediseñados en colores espectaculares.</p>
+                
+                <!-- Selector de Color para Pods Max -->
+                <div class="flex space-x-3 mb-6">
+                    <button onclick="changePodsColor('orange', this)" class="color-btn active w-8 h-8 rounded-full bg-orange-brand border border-orange-700" title="Naranja Neón"></button>
+                    <button onclick="changePodsColor('silver', this)" class="color-btn w-8 h-8 rounded-full bg-zinc-300 border border-zinc-500" title="Plata Premium"></button>
+                    <button onclick="changePodsColor('dark', this)" class="color-btn w-8 h-8 rounded-full bg-zinc-900 border border-black" title="Gris Oscuro"></button>
+                </div>
+
+                <div class="flex gap-4 mb-8">
+                    <button id="btn-comprar-pods" class="bg-gradient-to-r from-orange-brand to-orange-neon text-white px-8 py-3 rounded-full font-bold hover:brightness-110 transition-all text-sm" onclick="addToCart('pods_orange', 'Orange Pods Max (Naranja)', 549)">
+                        Comprar $549
+                    </button>
+                    <button onclick="openInfoModal('pods')" class="bg-white/5 text-white px-6 py-3 rounded-full font-bold hover:bg-white/10 transition-all text-sm flex items-center gap-2">
+                        Ficha Técnica <i class="ph ph-info"></i>
+                    </button>
+                </div>
+                
+                <div class="flex gap-8 mt-auto text-orange-brand relative">
+                    <!-- Audífonos Mockup que cambian de color -->
+                    <i id="pods-icon" class="ph ph-headphones text-9xl drop-shadow-[0_10px_30px_rgba(255,94,0,0.5)] transform hover:scale-110 transition-all duration-500"></i>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Chat Bot Virtual de Soporte Orange -->
+    <div id="chatbot-widget" class="fixed bottom-5 left-5 z-40">
+        <!-- Botón de Chat -->
+        <button onclick="toggleChatbot()" class="bg-gradient-to-r from-orange-brand to-orange-neon text-white p-4 rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-transform">
+            <i class="ph ph-chat-centered-dots text-3xl"></i>
+        </button>
+
+        <!-- Ventana de Chat (Oculta al inicio) -->
+        <div id="chatbot-window" class="fixed bottom-24 left-5 w-80 bg-apple-dark border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col hidden transition-all duration-300 transform scale-95 opacity-0">
+            <!-- Header del Chat -->
+            <div class="bg-gradient-to-r from-orange-brand to-orange-neon p-4 flex justify-between items-center text-white">
+                <div class="flex items-center space-x-2">
+                    <i class="ph-fill ph-robot text-2xl"></i>
+                    <div>
+                        <h4 class="font-bold text-sm">Soporte Orange</h4>
+                        <span class="text-[10px] text-white/80">Soporte creado por Roman</span>
+                    </div>
+                </div>
+                <button onclick="toggleChatbot()" class="hover:text-black">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Mensajes -->
+            <div id="chat-messages" class="flex-1 p-4 h-60 overflow-y-auto space-y-3 text-xs text-white">
+                <div class="bg-white/5 p-3 rounded-2xl max-w-[85%]">
+                    ¡Hola! Soy el asistente virtual de Orange 🍊. ¿En qué puedo ayudarte hoy sobre nuestros productos premium?
+                </div>
+            </div>
+
+            <!-- Input del Chat -->
+            <div class="p-3 border-t border-white/10 flex gap-2">
+                <input type="text" id="chat-input" placeholder="Pregúntame algo..." class="flex-1 bg-white/5 text-xs text-white rounded-xl px-3 py-2 outline-none border border-white/5 focus:border-orange-brand">
+                <button onclick="sendChatMessage()" class="bg-orange-brand p-2 rounded-xl text-white">
+                    <i class="ph ph-paper-plane-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black text-xs text-gray-500 py-12 mt-16 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-b border-white/5 pb-6 mb-6 leading-relaxed">
+                <p class="mb-2">1. Los precios publicados están representados en dólares estadounidenses y corresponden a transacciones realizadas mediante el portal Orange.</p>
+                <p>2. Roman y su equipo son los propietarios absolutos del diseño conceptual de la marca Orange Inc. Cualquier réplica debe mantener su marca de autoría.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h4 class="text-white font-bold mb-3 uppercase tracking-wider text-[10px]">Descubrir</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#mac" class="hover:underline hover:text-orange-brand transition-colors">Mac</a></li>
+                        <li><a href="#ipad" class="hover:underline hover:text-orange-brand transition-colors">iPad</a></li>
+                        <li><a href="#iphone" class="hover:underline hover:text-orange-brand transition-colors">iPhone</a></li>
+                        <li><a href="#watch" class="hover:underline hover:text-orange-brand transition-colors">Watch</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-3 uppercase tracking-wider text-[10px]">Servicios</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:underline hover:text-orange-brand transition-colors">Orange Music</a></li>
+                        <li><a href="#" class="hover:underline hover:text-orange-brand transition-colors">Orange TV+</a></li>
+                        <li><a href="#" class="hover:underline hover:text-orange-brand transition-colors">Orange Cloud</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-3 uppercase tracking-wider text-[10px]">Cuenta</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:underline hover:text-orange-brand transition-colors">Gestionar tu ID de Orange</a></li>
+                        <li><a href="#" class="hover:underline hover:text-orange-brand transition-colors">Bolsa de compras</a></li>
+                        <li><a href="#" class="hover:underline hover:text-orange-brand transition-colors">iCloud Orange</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-3 uppercase tracking-wider text-[10px]">Acerca de Orange</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:underline hover:text-orange-brand transition-colors">Sala de prensa</a></li>
+                        <li><a href="#" class="hover:underline hover:text-orange-brand transition-colors">Directores</a></li>
+                        <li><a href="#" class="hover:underline hover:text-orange-brand transition-colors">Inversores</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-white/5">
+                <p>Copyright © 2026 Orange Inc. Todos los derechos reservados.</p>
+                
+                <!-- Firma Llamativa del autor -->
+                <p class="mt-4 md:mt-0 font-extrabold text-white text-sm bg-gradient-to-r from-orange-brand to-orange-neon px-5 py-2.5 rounded-full inline-flex items-center gap-2 shadow-lg shadow-orange-brand/20">
+                    <i class="ph-fill ph-code-block text-white"></i>
+                    Inventado por Roman
+                </p>
+                
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="hover:underline">Política de privacidad</a>
+                    <span class="border-l border-white/20 h-4"></span>
+                    <a href="#" class="hover:underline">Términos de uso</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS Interactivo Avanzado -->
+    <script>
+        // Carrito y Descuentos
+        let cart = [];
+        let appliedDiscount = 0; // 0.20 para 20% si aplica
+        let currentCoupon = "";
+
+        // UI refs
+        const cartModal = document.getElementById('cart-modal');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const emptyCartMsg = document.getElementById('empty-cart-msg');
+        const cartTotalEl = document.getElementById('cart-total');
+        const cartSubtotalEl = document.getElementById('cart-subtotal');
+        const cartDiscountEl = document.getElementById('cart-discount');
+        const discountRow = document.getElementById('discount-row');
+        const cartBadge = document.getElementById('cart-badge');
+        
+        // Modal de Información Técnica
+        const infoModal = document.getElementById('info-modal');
+        const infoContent = document.getElementById('info-content');
+        const infoTitle = document.getElementById('info-title');
+        const infoText = document.getElementById('info-text');
+
+        // Buscar
+        const searchModal = document.getElementById('search-modal');
+        const searchInput = document.getElementById('search-input');
+
+        // Chatbot
+        const chatbotWindow = document.getElementById('chatbot-window');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+
+        // ---- FICHA TÉCNICA DINÁMICA ----
+        const specsDatabase = {
+            'phone': `
+                <p><strong>Procesador:</strong> Chip Orange A17 Pro (Arquitectura de 3 nanómetros con GPU de 6 núcleos para un rendimiento de juego sin precedentes).</p>
+                <p><strong>Pantalla:</strong> Super Retina XDR OLED de 6.7 pulgadas con ProMotion a 120Hz adaptativos y Always-On.</p>
+                <p><strong>Cámara:</strong> Sistema de triple cámara Pro con sensor principal de 48 MP y lente teleobjetivo de 5x para un zoom óptico perfecto.</p>
+                <p><strong>Materiales:</strong> Borde exterior de Titanio de calidad aeroespacial y vidrio cerámico ultra resistente.</p>
+            `,
+            'mac': `
+                <p><strong>Procesador:</strong> Chip Orange M3 con CPU de 8 núcleos y GPU de 10 núcleos que procesa gráficos complejos instantáneamente.</p>
+                <p><strong>Pantalla:</strong> Liquid Retina de 15.3 pulgadas con retroiluminación LED y soporte para 1,000 millones de colores.</p>
+                <p><strong>Batería:</strong> Hasta 18 horas de reproducción continua de vídeo de alta definición.</p>
+                <p><strong>Diseño:</strong> Chasis de aluminio 100% reciclado de tan solo 11.5 mm de espesor.</p>
+            `,
+            'ipad': `
+                <p><strong>Procesador:</strong> Chip Orange M2 integrado con motor neuronal de alta velocidad.</p>
+                <p><strong>Pantalla:</strong> Ultra Liquid Retina con tecnología ProMotion y True Tone para una visualización vívida.</p>
+                <p><strong>Compatibilidad:</strong> Soporta el lápiz inteligente Orange Pencil con sensor de inclinación y el Magic Keyboard de Roman.</p>
+            `,
+            'watch': `
+                <p><strong>Pantalla:</strong> Retina OLED siempre activa con un brillo asombroso de 3000 nits para días soleados.</p>
+                <p><strong>Salud:</strong> Sensor de temperatura, medición de oxígeno en sangre y lector de electrocardiograma incorporado.</p>
+                <p><strong>Batería:</strong> Autonomía de hasta 36 horas en uso convencional y modo ahorro extendido.</p>
+            `,
+            'pods': `
+                <p><strong>Sonido:</strong> Transductor dinámico diseñado por Orange con ecualización adaptativa automática.</p>
+                <p><strong>Aislamiento:</strong> Cancelación de Ruido Activa de nivel Profesional y Modo de Sonido Ambiente Inteligente.</p>
+                <p><strong>Conexión:</strong> Chip de audio Orange H2 con emparejamiento inmediato a todos tus dispositivos de la firma.</p>
+            `
+        };
+
+        function openInfoModal(productKey) {
+            infoTitle.textContent = "Ficha Técnica Premium";
+            infoText.innerHTML = specsDatabase[productKey];
+            infoModal.classList.remove('hidden');
+            setTimeout(() => {
+                infoModal.classList.remove('opacity-0');
+                infoContent.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function toggleInfoModal() {
+            infoModal.classList.add('opacity-0');
+            infoContent.classList.add('scale-95');
+            setTimeout(() => infoModal.classList.add('hidden'), 300);
+        }
+
+        infoModal.addEventListener('click', (e) => {
+            if (e.target === infoModal) toggleInfoModal();
+        });
+
+        // ---- CARRO DE COMPRA ----
+        function addToCart(id, name, price) {
+            const existingItem = cart.find(item => item.id === id);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ id, name, price, quantity: 1 });
+            }
+            updateCartUI();
+            showToast(`${name} agregado exitosamente.`);
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+        }
+
+        function updateQuantity(id, change) {
+            const item = cart.find(item => item.id === id);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(id);
+                } else {
+                    updateCartUI();
+                }
+            }
+        }
+
+        function updateCartUI() {
+            // Actualizar Badge en el Header
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            if (totalItems > 0) {
+                cartBadge.textContent = totalItems;
+                cartBadge.classList.remove('hidden');
+            } else {
+                cartBadge.classList.add('hidden');
+            }
+
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartItemsContainer.appendChild(emptyCartMsg);
+                emptyCartMsg.style.display = 'block';
+                cartSubtotalEl.textContent = '$0.00';
+                cartTotalEl.textContent = '$0.00';
+                discountRow.classList.add('hidden');
+                return;
+            }
+
+            emptyCartMsg.style.display = 'none';
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                subtotal += item.price * item.quantity;
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex justify-between items-center py-4 border-b border-white/5';
+                itemEl.innerHTML = `
+                    <div class="flex-1 pr-4">
+                        <h4 class="font-bold text-white text-sm">${item.name}</h4>
+                        <p class="text-orange-brand text-xs font-semibold">$${item.price.toLocaleString()}</p>
+                        <div class="flex items-center mt-2.5 space-x-3 bg-white/5 w-max rounded-full px-3 py-1 border border-white/10">
+                            <button onclick="updateQuantity('${item.id}', -1)" class="text-gray-400 hover:text-white font-bold px-1 text-sm">-</button>
+                            <span class="text-xs font-bold w-4 text-center text-white">${item.quantity}</span>
+                            <button onclick="updateQuantity('${item.id}', 1)" class="text-gray-400 hover:text-white font-bold px-1 text-sm">+</button>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-white">$${(item.price * item.quantity).toLocaleString()}</p>
+                        <button onclick="removeFromCart('${item.id}')" class="text-red-400 text-xs mt-3 hover:underline">Eliminar</button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(itemEl);
+            });
+
+            // Procesar descuentos
+            let discountAmount = 0;
+            if (appliedDiscount > 0) {
+                discountAmount = subtotal * appliedDiscount;
+                discountRow.classList.remove('hidden');
+                cartDiscountEl.textContent = `-$${discountAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            } else {
+                discountRow.classList.add('hidden');
+            }
+
+            let total = subtotal - discountAmount;
+
+            cartSubtotalEl.textContent = `$${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            cartTotalEl.textContent = `$${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // Aplicación del sistema de cupones
+        function applyCoupon() {
+            const codeInput = document.getElementById('coupon-code');
+            const feedback = document.getElementById('coupon-feedback');
+            const code = codeInput.value.trim().toUpperCase();
+
+            if (code === 'ROMAN20' || code === 'ORANGE') {
+                appliedDiscount = 0.20; // 20%
+                feedback.textContent = "Cupón válido. ¡Has obtenido un 20% de descuento!";
+                feedback.className = "text-xs mt-1 text-emerald-400 font-semibold block animate-bounce";
+                updateCartUI();
+            } else if (code === '') {
+                feedback.textContent = "Por favor ingresa un código.";
+                feedback.className = "text-xs mt-1 text-amber-400 font-semibold block";
+            } else {
+                feedback.textContent = "Código inválido. Intenta con ROMAN20.";
+                feedback.className = "text-xs mt-1 text-red-400 font-semibold block";
+            }
+        }
+
+        function toggleCart() {
+            if (cartModal.classList.contains('hidden')) {
+                cartModal.classList.remove('hidden');
+                setTimeout(() => {
+                    cartModal.classList.remove('opacity-0');
+                    cartSidebar.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                cartModal.classList.add('opacity-0');
+                cartSidebar.classList.add('translate-x-full');
+                setTimeout(() => cartModal.classList.add('hidden'), 300);
+            }
+        }
+
+        cartModal.addEventListener('click', (e) => {
+            if (e.target === cartModal) toggleCart();
+        });
+
+        // Completar pedido mock
+        function checkout() {
+            if (cart.length === 0) {
+                showToast("El carrito está vacío.");
+                return;
+            }
+            alert(`¡Gracias por tu compra! Roman y el equipo de Orange están procesando tu pedido.`);
+            cart = [];
+            appliedDiscount = 0;
+            document.getElementById('coupon-code').value = '';
+            document.getElementById('coupon-feedback').classList.add('hidden');
+            updateCartUI();
+            toggleCart();
+        }
+
+        // ---- SISTEMA DE BÚSQUEDA ----
+        function toggleSearch() {
+            if (searchModal.classList.contains('hidden')) {
+                searchModal.classList.remove('hidden');
+                setTimeout(() => {
+                    searchModal.classList.remove('opacity-0');
+                    searchInput.focus();
+                }, 10);
+            } else {
+                searchModal.classList.add('opacity-0');
+                setTimeout(() => searchModal.classList.add('hidden'), 300);
+            }
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const links = document.querySelectorAll('#search-results a');
+            links.forEach(link => {
+                if (link.textContent.toLowerCase().includes(query)) {
+                    link.style.display = 'block';
+                } else {
+                    link.style.display = 'none';
+                }
+            });
+        });
+
+        // ---- INTERACTIVIDAD DE COLORES DE PRODUCTOS ----
+
+        // 1. Orange Phone
+        const phoneColors = {
+            'natural': { name: 'Titanio Natural', bg: 'from-orange-950/40 via-purple-900/40 to-black' },
+            'blue': { name: 'Titanio Azul', bg: 'from-blue-900/50 via-gray-900/50 to-black' },
+            'white': { name: 'Titanio Blanco', bg: 'from-gray-300/30 via-gray-100/20 to-gray-800' },
+            'black': { name: 'Titanio Negro', bg: 'from-gray-900 via-black to-black' }
+        };
+
+        function changePhoneColor(colorKey, btnElement) {
+            document.querySelectorAll('#iphone .color-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            const colorData = phoneColors[colorKey];
+            document.getElementById('phone-color-name').textContent = colorData.name;
+            document.getElementById('phone-wallpaper').className = `absolute inset-0 bg-gradient-to-tr ${colorData.bg} rounded-[40px] transition-all duration-700`;
+            
+            const btnComprar = document.getElementById('btn-comprar-phone');
+            btnComprar.setAttribute('onclick', `addToCart('phone15pro_${colorKey}', 'Orange Phone 15 Pro (${colorData.name})', 999)`);
+        }
+
+        // 2. Orange Pad
+        const ipadColors = {
+            'silver': { name: 'Plateado', bg: 'from-orange-500 to-amber-500' },
+            'space': { name: 'Gris Espacial', bg: 'from-zinc-800 to-neutral-900' }
+        };
+
+        function changeIpadColor(colorKey, btnElement) {
+            document.querySelectorAll('#ipad .color-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            const colorData = ipadColors[colorKey];
+            const ipadMockup = document.getElementById('ipad-mockup');
+            ipadMockup.firstElementChild.className = `absolute inset-0 bg-gradient-to-tr ${colorData.bg} opacity-80 transition-all duration-700`;
+            
+            document.getElementById('btn-comprar-pad').setAttribute('onclick', `addToCart('padpro_${colorKey}', 'Orange Pad Pro (${colorData.name})', 799)`);
+        }
+
+        // 3. Orange Watch
+        const watchColors = {
+            'orange': { name: 'Correa Naranja', bg: '#ff5e00' },
+            'green': { name: 'Correa Verde Militar', bg: '#047857' },
+            'black': { name: 'Correa Negro Carbono', bg: '#27272a' }
+        };
+
+        function changeWatchColor(colorKey, btnElement) {
+            document.querySelectorAll('#watch .color-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            const colorData = watchColors[colorKey];
+            const watchBand = document.getElementById('watch-band');
+            watchBand.style.backgroundColor = colorData.bg;
+            
+            document.getElementById('btn-comprar-watch').setAttribute('onclick', `addToCart('watch_${colorKey}', 'Orange Watch Ultra (${colorData.name})', 399)`);
+        }
+
+        // 4. Orange Pods Max
+        const podsColors = {
+            'orange': { name: 'Naranja', class: 'text-orange-brand' },
+            'silver': { name: 'Plata Premium', class: 'text-gray-300' },
+            'dark': { name: 'Gris Oscuro', class: 'text-zinc-700' }
+        };
+
+        function changePodsColor(colorKey, btnElement) {
+            document.querySelectorAll('#airpods .color-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            const colorData = podsColors[colorKey];
+            const podsIcon = document.getElementById('pods-icon');
+            podsIcon.className = `ph ph-headphones text-9xl ${colorData.class} drop-shadow-xl transform hover:scale-110 transition-all duration-500`;
+            
+            document.getElementById('btn-comprar-pods').setAttribute('onclick', `addToCart('pods_${colorKey}', 'Orange Pods Max (${colorData.name})', 549)`);
+        }
+
+        // ---- INTERACTIVIDAD DE LA MAC (ALMACENAMIENTO) ----
+        function changeMacCapacity(capacity, price, btnElement) {
+            document.querySelectorAll('.mac-cap-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'shadow-md', 'text-black');
+                btn.classList.add('text-gray-600');
+            });
+            btnElement.classList.add('bg-white', 'shadow-md', 'text-black');
+            btnElement.classList.remove('text-gray-600');
+
+            const gbLabel = capacity === 1024 ? '1TB' : `${capacity}GB`;
+            const btnComprarMac = document.getElementById('btn-comprar-mac');
+            btnComprarMac.textContent = `Comprar $${price}`;
+            btnComprarMac.setAttribute('onclick', `addToCart('bookair_${capacity}', 'Orange Book Air M3 (${gbLabel})', ${price})`);
+        }
+
+        // ---- CHATBOT DE SOPORTE ----
+        function toggleChatbot() {
+            if (chatbotWindow.classList.contains('hidden')) {
+                chatbotWindow.classList.remove('hidden');
+                setTimeout(() => {
+                    chatbotWindow.classList.remove('opacity-0', 'scale-95');
+                }, 10);
+            } else {
+                chatbotWindow.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => chatbotWindow.classList.add('hidden'), 300);
+            }
+        }
+
+        function sendChatMessage() {
+            const query = chatInput.value.trim();
+            if (query === '') return;
+
+            // Renderizar mensaje de usuario
+            const userMsg = document.createElement('div');
+            userMsg.className = 'bg-orange-brand/20 p-3 rounded-2xl max-w-[85%] ml-auto text-right border border-orange-brand/20';
+            userMsg.textContent = query;
+            chatMessages.appendChild(userMsg);
+            
+            chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Simular respuesta del bot
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = 'bg-white/5 p-3 rounded-2xl max-w-[85%]';
+                
+                let response = "¡Increíble pregunta! Todos nuestros dispositivos son diseñados meticulosamente por Roman. ¿Deseas saber más acerca de las ofertas o aplicar el cupón de descuento ROMAN20?";
+                
+                const qLower = query.toLowerCase();
+                if (qLower.includes('precio') || qLower.includes('comprar')) {
+                    response = "Puedes agregar cualquier producto al carrito directamente y aplicar el código ROMAN20 para ahorrar un 20%. ¡Es una oportunidad única!";
+                } else if (qLower.includes('roman')) {
+                    response = "Roman es el cerebro detrás de esta lujosa experiencia técnica. Creó cada detalle pensando en la innovación táctil y visual de Orange.";
+                } else if (qLower.includes('envio') || qLower.includes('envío')) {
+                    response = "Ofrecemos envío express gratuito en todas las compras de Orange. ¡Tu paquete llegará empaquetado premium de inmediato!";
+                }
+                
+                botMsg.textContent = response;
+                chatMessages.appendChild(botMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 1000);
+        }
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+
+        // ---- TOASTS ----
+        let toastTimeout;
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.remove('hidden');
+            void toast.offsetWidth; // Forzar reflow
+            toast.classList.add('toast-enter-active');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('toast-enter-active');
+                setTimeout(() => toast.classList.add('hidden'), 400);
+            }, 3000);
+        }
+
+        // Efectos del Navbar al hacer scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-lg', 'border-orange-brand/10');
+            } else {
+                nav.classList.remove('shadow-lg', 'border-orange-brand/10');
+            }
+        });
+
+        // Carga inicial
+        updateCartUI();
+    </script>
+</body>
+</html>
